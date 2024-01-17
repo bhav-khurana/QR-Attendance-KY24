@@ -1,11 +1,12 @@
+// ignore_for_file: curly_braces_in_flow_control_structures, use_build_context_synchronously
+
 import 'dart:convert';
 
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_attendance/constants/api.dart';
 import 'package:simple_barcode_scanner/simple_barcode_scanner.dart';
 import 'package:http/http.dart' as http;
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -52,61 +53,51 @@ class _HomePageState extends State<HomePage> {
             Center(
               child: ElevatedButton(
                 onPressed: () async {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
                   var res = await Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const SimpleBarcodeScannerPage(),
+                      builder: (context) => const SimpleBarcodeScannerPage(
+                        isShowFlashIcon: true,
+                      ),
                     ),
                   );
                   if (res is String) {
                     result = res;
                     getResponse(res).then((response) {
-                      String msg = '', title = '';
-                      ContentType contentType = ContentType.help;
+                      String msg = '';
+                      CoolAlertType coolAlertType = CoolAlertType.success;
 
                       switch (response) {
                         case Api.sucess:
-                          title = 'Success';
+                          coolAlertType = CoolAlertType.success;
                           msg = 'Attendance marked successfully';
-                          contentType = ContentType.success;
                           break;
                         case Api.alreadyDone:
-                          title = 'Already Marked';
+                          coolAlertType = CoolAlertType.warning;
                           msg = 'Attendance already marked';
-                          contentType = ContentType.warning;
                           break;
                         case Api.invalidDay:
-                          title = 'Invalid Day';
+                          coolAlertType = CoolAlertType.error;
                           msg = 'Ticket is not valid for this day';
-                          contentType = ContentType.failure;
                           break;
                         case Api.invalidTicket:
-                          title = 'Invalid Ticket';
+                          coolAlertType = CoolAlertType.error;
                           msg = 'Ticket is not valid';
-                          contentType = ContentType.failure;
                           break;
                         default:
-                          title = 'Aw Snap :(';
+                          coolAlertType = CoolAlertType.error;
                           msg = 'Something went wrong';
-                          contentType = ContentType.failure;
                           break;
                       }
-                      final snackBar = SnackBar(
-                        elevation: 0,
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: Colors.transparent,
-                        content: AwesomeSnackbarContent(
-                          title: title,
-                          message: msg,
-                          contentType: contentType,
-                        ),
+                      CoolAlert.show(
+                        context: context,
+                        type: coolAlertType,
+                        text: msg,
                       );
-                      ScaffoldMessenger.of(context)
-                        ..hideCurrentSnackBar()
-                        ..showSnackBar(snackBar);
                     });
-                    setState(() {});
                   }
+                  setState(() {});
                 },
                 child: const Text('Open Scanner'),
               ),
@@ -114,9 +105,6 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(
               height: 30,
             ),
-            result != null
-                ? Text('Scanned Data = $result')
-                : const Text('Scanned data will appear here')
           ],
         ),
       ),
